@@ -114,19 +114,25 @@ function App() {
   const submitDataToSpreadsheet = (rating, notes) => {
     const timestampDate = new Date().toLocaleDateString();
     const timestampTime = new Date().toLocaleTimeString();
-    console.log(`Data Saved: ${timestampDate} ${timestampTime} | ${rating} | ${notes}`);
 
-    const googleFormUrl = "https://google.com";
+    // FIXED URL: The '/e/' has been completely removed from the string below
+    const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc_aUyrCGT_MXDX9sCgTVqcNFG5T0B6Ar4J6zN1cHhegk9j6A/formResponse";
+    
     const formData = new FormData();
-    formData.append("entry.11111111", timestampDate);
-    formData.append("entry.22222222", timestampTime);
-    formData.append("entry.33333333", rating);
-    formData.append("entry.44444444", notes);
+    formData.append("entry.148537627", timestampDate);  
+    formData.append("entry.1726615638", timestampTime); 
+    formData.append("entry.484896489", rating);         
+    formData.append("entry.914361873", notes);          
 
-    fetch(googleFormUrl, { method: "POST", mode: "no-cors" })
-      .then(() => console.log("Piped successfully."))
-      .catch((e) => console.error("Sheet entry error:", e));
+    fetch(googleFormUrl, { 
+      method: "POST", 
+      mode: "no-cors",
+      body: formData // Sends the clean form data directly
+    })
+    .then(() => console.log("Piped successfully into cloud tracking columns."))
+    .catch((e) => console.error("Sheet entry error logged:", e));
   };
+
 
   const handleRatingSelect = (selection) => {
     setUserRating(selection);
