@@ -18,7 +18,6 @@ function App() {
   const [currentDayStr, setCurrentDayStr] = useState('');
   const [currentTimeStr, setCurrentTimeStr] = useState('');
   const [chartData, setChartData] = useState([]);
-  
   const [feedbackStep, setFeedbackStep] = useState('initial');
   const [userRating, setUserRating] = useState('');
   const [feedbackNotes, setFeedbackNotes] = useState('');
@@ -85,7 +84,7 @@ function App() {
     }
 
     setChartData(generatedPoints);
-    
+
     if (window.Notification && Notification.permission === "granted") {
       setNotificationsEnabled(true);
     }
@@ -115,24 +114,22 @@ function App() {
     const timestampDate = new Date().toLocaleDateString();
     const timestampTime = new Date().toLocaleTimeString();
 
-    // FIXED URL: The '/e/' has been completely removed from the string below
-    const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc_aUyrCGT_MXDX9sCgTVqcNFG5T0B6Ar4J6zN1cHhegk9j6A/formResponse";
+    const googleFormUrl = "https://google.com";
     
     const formData = new FormData();
-    formData.append("entry.148537627", timestampDate);  
-    formData.append("entry.1726615638", timestampTime); 
-    formData.append("entry.484896489", rating);         
-    formData.append("entry.914361873", notes);          
+    formData.append("entry.148537627", timestampDate);
+    formData.append("entry.1726615638", timestampTime);
+    formData.append("entry.484896489", rating);
+    formData.append("entry.914361873", notes);
 
-    fetch(googleFormUrl, { 
-      method: "POST", 
+    fetch(googleFormUrl, {
+      method: "POST",
       mode: "no-cors",
-      body: formData // Sends the clean form data directly
+      body: formData 
     })
     .then(() => console.log("Piped successfully into cloud tracking columns."))
     .catch((e) => console.error("Sheet entry error logged:", e));
   };
-
 
   const handleRatingSelect = (selection) => {
     setUserRating(selection);
@@ -150,100 +147,112 @@ function App() {
   };
 
   return (
-    <div className="phone-frame">
-      <div className="header">
-        <div>
+    <div className="dashboard-container">
+      <header className="app-header">
+        <div className="brand-group">
           <h1 className="main-title">LineUp</h1>
           <p className="subtitle">ShakeSmart · Norris Student Center</p>
         </div>
-        <span className="bell-icon" onClick={toggleNotifications} style={{ color: notificationsEnabled ? '#4e2a84' : '#666', cursor: 'pointer' }}>
-          {notificationsEnabled ? '🔔' : '🔕'}
-        </span>
-      </div>
+        <button className="notification-toggle" onClick={toggleNotifications} aria-label="Toggle notifications">
+          <span className="bell-icon" style={{ color: notificationsEnabled ? '#4e2a84' : '#666' }}>
+            {notificationsEnabled ? '🔔' : '🔕'}
+          </span>
+        </button>
+      </header>
 
-      <div className="day-banner">
-        <span className="day-text">Today — {currentDayStr}</span>
-      </div>
+      <main className="dashboard-grid">
+        <section className="summary-column">
+          <div className="day-banner">
+            <span className="day-text">Today — {currentDayStr}</span>
+          </div>
 
-      <div className="purple-card">
-        <div className="live-indicator">
-          <span className="pulse-dot">🔘</span>
-          <span>Live: {liveData.statusText}</span>
-        </div>
-        <h2 className="card-stats">
-          {liveData.peopleCount} people in line · {liveData.waitTime} minute wait
-        </h2>
-      </div>
+          <div className="purple-card">
+            <div className="live-indicator">
+              <span className="pulse-dot">🔘</span>
+              <span>Live: {liveData.statusText}</span>
+            </div>
+            <h2 className="card-stats">
+              {liveData.peopleCount} people in line · {liveData.waitTime} minute wait
+            </h2>
+          </div>
 
-      <div className="section-container">
-        <h3 className="section-title">BUSY TIMES TODAY</h3>
-        <div className="chart-wrapper">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorPurple" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4e2a84" stopOpacity={0.3}/>
-                  <stop offset="95%" stopColor="#4e2a84" stopOpacity={0.0}/>
-                </linearGradient>
-              </defs>
-              <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} unit="m" />
-              <Tooltip contentStyle={{ backgroundColor: '#4e2a84', borderRadius: '10px', color: '#fff' }} itemStyle={{ color: '#fff' }} />
-              <ReferenceLine x={currentTimeStr} stroke="#4e2a84" strokeWidth={1} strokeDasharray="3 3" />
-              <Area type="monotone" dataKey="wait" stroke="#4e2a84" strokeWidth={4} fill="url(#colorPurple)" dot={false} />
-              <Area type="monotone" dataKey="futureWait" stroke="#4e2a84" strokeWidth={3} strokeDasharray="6 6" fill="none" dot={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="section-container">
-        <h3 className="section-title">BEST TIMES TODAY</h3>
-        <div className="time-tag-container">
-          {liveData.bestTimes.map(time => (
-            <span key={time} className="time-tag">{time}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="feedback-container">
-        {feedbackStep === 'initial' && (
-          <button onClick={() => setFeedbackStep('rating')} className="action-button">
-            Would you like to give us feedback?
-          </button>
-        )}
-
-        {feedbackStep === 'rating' && (
-          <div className="quiz-box">
-            <p className="quiz-question">How accurate was this?</p>
-            <div className="quiz-option-wrapper">
-              <button onClick={() => handleRatingSelect('Accurate')} className="quiz-option">1. Accurate</button>
-              <button onClick={() => handleRatingSelect('Somewhat Accurate')} className="quiz-option">2. Somewhat accurate</button>
-              <button onClick={() => handleRatingSelect('Not Accurate')} className="quiz-option">3. Not accurate</button>
-              <button onClick={() => handleRatingSelect('Others')} className="quiz-option">4. Others</button>
+          <div className="section-container">
+            <h3 className="section-title">BEST TIMES TODAY</h3>
+            <div className="time-tag-container">
+              {liveData.bestTimes.map(time => (
+                <span key={time} className="time-tag">{time}</span>
+              ))}
             </div>
           </div>
-        )}
+        </section>
 
-        {feedbackStep === 'textFollowUp' && (
-          <div className="quiz-box">
-            <p className="quiz-question">
-              {userRating === 'Others' ? "Tell us what happened with your experience:" : "Tell us what happened (e.g. less staff, wrong estimation?)"}
-            </p>
-            <textarea className="text-input-area" placeholder="Type your feedback here..." value={feedbackNotes} onChange={(e) => setFeedbackNotes(e.target.value)} rows={3} />
-            <button onClick={handleTextNotesSubmit} className="submit-notes-button">
-              Submit Feedback
+        <section className="chart-column">
+          <div className="section-container card-wrapper-bg">
+            <h3 className="section-title">BUSY TIMES TODAY</h3>
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorPurple" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4e2a84" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#4e2a84" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} unit="m" />
+                  <Tooltip contentStyle={{ backgroundColor: '#4e2a84', borderRadius: '10px', color: '#fff' }} itemStyle={{ color: '#fff' }} />
+                  <ReferenceLine x={currentTimeStr} stroke="#4e2a84" strokeWidth={1} strokeDasharray="3 3" />
+                  <Area type="monotone" dataKey="wait" stroke="#4e2a84" strokeWidth={4} fill="url(#colorPurple)" dot={false} />
+                  <Area type="monotone" dataKey="futureWait" stroke="#4e2a84" strokeWidth={3} strokeDasharray="6 6" fill="none" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="feedback-wrapper">
+        <div className="feedback-inner">
+          {feedbackStep === 'initial' && (
+            <button onClick={() => setFeedbackStep('rating')} className="action-button">
+              Would you like to give us feedback?
             </button>
-          </div>
-        )}
+          )}
 
-        {feedbackStep === 'thankyou' && (
-          <div className="thank-you-box">
-            <p className="thank-you-text">Thank you for helping calibrate our predictive data modeling!</p>
-            <button onClick={() => { setFeedbackStep('initial'); setUserRating(''); setFeedbackNotes(''); }} className="reset-button">Back</button>
-          </div>
-        )}
-      </div>
+          {feedbackStep === 'rating' && (
+            <div className="quiz-box">
+              <p className="quiz-question">How accurate was this?</p>
+              <div className="quiz-option-grid">
+                <button onClick={() => handleRatingSelect('Accurate')} className="quiz-option">1. Accurate</button>
+                <button onClick={() => handleRatingSelect('Somewhat Accurate')} className="quiz-option">2. Somewhat accurate</button>
+                <button onClick={() => handleRatingSelect('Not Accurate')} className="quiz-option">3. Not accurate</button>
+                <button onClick={() => handleRatingSelect('Others')} className="quiz-option">4. Others</button>
+              </div>
+            </div>
+          )}
+
+          {feedbackStep === 'textFollowUp' && (
+            <div className="quiz-box">
+              <p className="quiz-question">
+                {userRating === 'Others' ? "Tell us what happened with your experience:" : "Tell us what happened (e.g. less staff, wrong estimation?)"}
+              </p>
+              <div className="text-submit-group">
+                <textarea className="text-input-area" placeholder="Type your feedback here..." value={feedbackNotes} onChange={(e) => setFeedbackNotes(e.target.value)} rows={2} />
+                <button onClick={handleTextNotesSubmit} className="submit-notes-button">
+                  Submit
+                </button>
+              </div>
+            </div>
+          )}
+
+          {feedbackStep === 'thankyou' && (
+            <div className="thank-you-box">
+              <p className="thank-you-text">Thank you for helping calibrate our predictive data modeling!</p>
+              <button onClick={() => { setFeedbackStep('initial'); setUserRating(''); setFeedbackNotes(''); }} className="reset-button">Back</button>
+            </div>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
