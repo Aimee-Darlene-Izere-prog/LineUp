@@ -114,7 +114,7 @@ function App() {
     const timestampDate = new Date().toLocaleDateString();
     const timestampTime = new Date().toLocaleTimeString();
 
-    const googleFormUrl = "https://google.com";
+    const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc_aUyrCGT_MXDX9sCgTVqcNFG5T0B6Ar4J6zN1cHhegk9j6A/formResponse";
     
     const formData = new FormData();
     formData.append("entry.148537627", timestampDate);
