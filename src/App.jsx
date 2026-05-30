@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
-import './App.css'; // Connects to the clean stylesheet we will create next
+import './App.css'; 
 
 const baseHourlyTemplate = [
   { hour: 9, label: '9a', baseWait: 3 },
@@ -22,6 +22,7 @@ function App() {
   const [feedbackStep, setFeedbackStep] = useState('initial');
   const [userRating, setUserRating] = useState('');
   const [feedbackNotes, setFeedbackNotes] = useState('');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
 
   const [liveData] = useState({
     statusText: "More busy than usual",
@@ -84,13 +85,54 @@ function App() {
     }
 
     setChartData(generatedPoints);
+    
+    if (window.Notification && Notification.permission === "granted") {
+      setNotificationsEnabled(true);
+    }
   }, [liveData.waitTime]);
+
+  const toggleNotifications = () => {
+    if (!window.Notification) {
+      alert("This browser does not support notifications.");
+      return;
+    }
+    if (Notification.permission === "granted") {
+      alert("Notifications are already enabled!");
+      setNotificationsEnabled(true);
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((p) => {
+        if (p === "granted") {
+          setNotificationsEnabled(true);
+          new Notification("LineUp Enabled", { body: "Smart alerts are active!" });
+        }
+      });
+    } else {
+      alert("Please enable notification permissions in your browser settings.");
+    }
+  };
+
+  const submitDataToSpreadsheet = (rating, notes) => {
+    const timestampDate = new Date().toLocaleDateString();
+    const timestampTime = new Date().toLocaleTimeString();
+    console.log(`Data Saved: ${timestampDate} ${timestampTime} | ${rating} | ${notes}`);
+
+    const googleFormUrl = "https://google.com";
+    const formData = new FormData();
+    formData.append("entry.11111111", timestampDate);
+    formData.append("entry.22222222", timestampTime);
+    formData.append("entry.33333333", rating);
+    formData.append("entry.44444444", notes);
+
+    fetch(googleFormUrl, { method: "POST", mode: "no-cors" })
+      .then(() => console.log("Piped successfully."))
+      .catch((e) => console.error("Sheet entry error:", e));
+  };
 
   const handleRatingSelect = (selection) => {
     setUserRating(selection);
     if (selection === 'Accurate') {
       setFeedbackStep('thankyou');
-      console.log(`Submitted feedback rating: Accurate`);
+      submitDataToSpreadsheet('Accurate', 'N/A');
     } else {
       setFeedbackStep('textFollowUp');
     }
@@ -98,13 +140,7 @@ function App() {
 
   const handleTextNotesSubmit = () => {
     setFeedbackStep('thankyou');
-    console.log(`Submitted feedback payload: { rating: "${userRating}", details: "${feedbackNotes}" }`);
-  };
-
-  const resetFeedbackWidget = () => {
-    setFeedbackStep('initial');
-    setUserRating('');
-    setFeedbackNotes('');
+    submitDataToSpreadsheet(userRating, feedbackNotes);
   };
 
   return (
@@ -114,7 +150,9 @@ function App() {
           <h1 className="main-title">LineUp</h1>
           <p className="subtitle">ShakeSmart · Norris Student Center</p>
         </div>
-        <span className="bell-icon">🔔</span>
+        <span className="bell-icon" onClick={toggleNotifications} style={{ color: notificationsEnabled ? '#4e2a84' : '#666', cursor: 'pointer' }}>
+          {notificationsEnabled ? '🔔' : '🔕'}
+        </span>
       </div>
 
       <div className="day-banner">
@@ -184,17 +222,9 @@ function App() {
         {feedbackStep === 'textFollowUp' && (
           <div className="quiz-box">
             <p className="quiz-question">
-              {userRating === 'Others' 
-                ? "Tell us what happened with your experience:" 
-                : "Tell us what happened (e.g. less staff, wrong estimation ?)"}
+              {userRating === 'Others' ? "Tell us what happened with your experience:" : "Tell us what happened (e.g. less staff, wrong estimation?)"}
             </p>
-            <textarea
-              className="text-input-area"
-              placeholder="Type your feedback here..."
-              value={feedbackNotes}
-              onChange={(e) => setFeedbackNotes(e.target.value)}
-              rows={3}
-            />
+            <textarea className="text-input-area" placeholder="Type your feedback here..." value={feedbackNotes} onChange={(e) => setFeedbackNotes(e.target.value)} rows={3} />
             <button onClick={handleTextNotesSubmit} className="submit-notes-button">
               Submit Feedback
             </button>
@@ -204,7 +234,7 @@ function App() {
         {feedbackStep === 'thankyou' && (
           <div className="thank-you-box">
             <p className="thank-you-text">Thank you for helping calibrate our predictive data modeling!</p>
-            <button onClick={resetFeedbackWidget} className="reset-button">Back</button>
+            <button onClick={() => { setFeedbackStep('initial'); setUserRating(''); setFeedbackNotes(''); }} className="reset-button">Back</button>
           </div>
         )}
       </div>
