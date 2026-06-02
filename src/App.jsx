@@ -22,6 +22,7 @@ function App() {
   const [userRating, setUserRating] = useState('');
   const [feedbackNotes, setFeedbackNotes] = useState('');
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [disclaimerOpen, setDisclaimerOpen] = useState(false);
 
   const [liveData] = useState({
     statusText: "More busy than usual",
@@ -153,11 +154,16 @@ function App() {
           <h1 className="main-title">LineUp</h1>
           <p className="subtitle">ShakeSmart · Norris Student Center</p>
         </div>
-        <button className="notification-toggle" onClick={toggleNotifications} aria-label="Toggle notifications">
-          <span className="bell-icon" style={{ color: notificationsEnabled ? '#4e2a84' : '#666' }}>
-            {notificationsEnabled ? '🔔' : '🔕'}
-          </span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button className="notification-toggle" onClick={() => setDisclaimerOpen(true)} title="Privacy Info" style={{ fontSize: '20px' }}>
+            ⚠️
+          </button>
+          <button className="notification-toggle" onClick={toggleNotifications} aria-label="Toggle notifications">
+            <span className="bell-icon" style={{ color: notificationsEnabled ? '#4e2a84' : '#666' }}>
+              {notificationsEnabled ? '🔔' : '🔕'}
+            </span>
+          </button>
+        </div>
       </header>
 
       <main className="dashboard-grid">
@@ -253,6 +259,26 @@ function App() {
           )}
         </div>
       </footer>
+
+      {disclaimerOpen && (
+        <div className="modal-backdrop" onClick={() => setDisclaimerOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ margin: '0 0 12px 0', color: '#4e2a84', fontSize: '20px', fontWeight: '700' }}>
+              Privacy &amp; Transparency Disclaimer
+            </h2>
+            <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555', margin: '0 0 20px 0' }}>
+              LineUp cares about student privacy. Our backend checks the line using a camera and an
+              automated object counting model (YOLO). This model only counts the total number of
+              people standing in the queue zone. The live camera stream is processed instantly in
+              temporary memory and deleted. No video footage is ever saved, and no student faces or
+              identities are tracked or stored in the cloud.
+            </p>
+            <button className="reset-button" onClick={() => setDisclaimerOpen(false)} style={{ backgroundColor: '#4e2a84', color: 'white', padding: '10px 24px' }}>
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
