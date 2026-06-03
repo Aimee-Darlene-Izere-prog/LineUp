@@ -71,6 +71,10 @@ body {
 
 .day-banner {
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .day-text {
@@ -303,4 +307,154 @@ body {
     flex-direction: column;
     align-items: stretch;
   }
+}
+
+/* ── Day selector strip ── */
+
+.day-selector-strip {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.day-pill {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.15s ease;
+  background: none;
+  line-height: 1;
+}
+
+.day-pill__abbr {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.day-pill__today-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: currentColor;
+  margin-top: 4px;
+  opacity: 0.6;
+}
+
+/* Past days */
+.day-pill--past {
+  background-color: #f3f4f6;
+  color: #555;
+  border-color: #e5e7eb;
+}
+.day-pill--past:hover {
+  background-color: #e9eaec;
+  border-color: #ccc;
+}
+
+/* Today */
+.day-pill--today {
+  background-color: #4e2a84;
+  color: #fff;
+  border-color: #4e2a84;
+}
+
+/* Future days */
+.day-pill--future {
+  background-color: #fff;
+  color: #aaa;
+  border-color: #e5e7eb;
+}
+.day-pill--future:hover {
+  background-color: #f9f9f9;
+  border-color: #ccc;
+  color: #888;
+}
+
+/* Selected state overrides for past / future */
+.day-pill--past.day-pill--selected {
+  background-color: #4e2a84;
+  color: #fff;
+  border-color: #4e2a84;
+}
+.day-pill--future.day-pill--selected {
+  background-color: #4e2a84;
+  color: #fff;
+  border-color: #4e2a84;
+}
+
+/* Closed days (Sat / Sun) */
+.day-pill--closed {
+  background-color: #f9fafb;
+  color: #ccc;
+  border-color: #e5e7eb;
+  cursor: default;
+}
+.day-pill--closed:hover {
+  background-color: #f9fafb;
+  border-color: #e5e7eb;
+  color: #ccc;
+}
+.day-pill--closed.day-pill--selected {
+  background-color: #e5e7eb;
+  color: #999;
+  border-color: #d1d5db;
+}
+
+/* Day type badge shown next to day name */
+.day-type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.day-type-badge--past {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+.day-type-badge--future {
+  background-color: #faf5ff;
+  color: #6b21a8;
+}
+
+/* Subtle note under chart title for future days */
+.chart-prediction-note {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: -10px;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+
+/* Closed message shown in place of the chart */
+.closed-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+  gap: 8px;
+}
+.closed-icon {
+  font-size: 36px;
+}
+.closed-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #bbb;
+  margin: 0;
+  letter-spacing: 1px;
+}
+.closed-subtitle {
+  font-size: 14px;
+  color: #bbb;
+  margin: 0;
 }
