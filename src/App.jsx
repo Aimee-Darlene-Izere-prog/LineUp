@@ -410,11 +410,12 @@ function App() {
               Privacy &amp; Transparency Disclaimer
             </h2>
             <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555', margin: '0 0 20px 0' }}>
-              LineUp cares about student privacy. Our backend checks the line using a camera and an
-              automated object counting model (YOLO). This model only counts the total number of
-              people standing in the queue zone. The live camera stream is processed instantly in
-              temporary memory and deleted. No video footage is ever saved, and no student faces or
-              identities are tracked or stored in the cloud.
+              Estimates based on typical conditions:
+              <ul style={{ textAlign: 'left', marginTop: '10px', paddingLeft: '20px', lineHeight: '1.8' }}>
+                <li>Prediction model learns from past patterns.</li>
+                <li>Predictions may not account for staffing changes or special events.</li>
+                <li>No data stored about users.</li>
+              </ul>
             </p>
             <button className="reset-button" onClick={() => setDisclaimerOpen(false)} style={{ backgroundColor: '#4e2a84', color: 'white', padding: '10px 24px' }}>
               Close
