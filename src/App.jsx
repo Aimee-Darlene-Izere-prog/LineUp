@@ -3,26 +3,31 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceL
 import './App.css'; 
 
 const baseHourlyTemplate = [
-  { hour: 9, label: '9a', baseWait: 3 },
-  { hour: 10, label: '10a', baseWait: 5 },
-  { hour: 11, label: '11a', baseWait: 4 },
+  { hour: 8,  label: '8a',  baseWait: 2  },
+  { hour: 9,  label: '9a',  baseWait: 3  },
+  { hour: 10, label: '10a', baseWait: 5  },
+  { hour: 11, label: '11a', baseWait: 4  },
   { hour: 12, label: '12p', baseWait: 14 },
-  { hour: 1, label: '1p', baseWait: 8 },
-  { hour: 2, label: '2p', baseWait: 4 },
-  { hour: 3, label: '3p', baseWait: 7 },
-  { hour: 4, label: '4p', baseWait: 5 },
-  { hour: 5, label: '5p', baseWait: 4 },
+  { hour: 13, label: '1p',  baseWait: 8  },
+  { hour: 14, label: '2p',  baseWait: 4  },
+  { hour: 15, label: '3p',  baseWait: 7  },
+  { hour: 16, label: '4p',  baseWait: 5  },
+  { hour: 17, label: '5p',  baseWait: 4  },
+  { hour: 18, label: '6p',  baseWait: 2  },
 ];
 
-// Historical data per day (index 0 = Sunday)
+const OPEN_HOUR  = 8;   // 8:00 am
+const CLOSE_HOUR = 18;  // 6:00 pm
+
+// Historical data per day (index 0 = Sunday) — 11 hourly slots (8a–6p)
 const historicalDataByDay = {
-  0: [2,3,3,8,5,3,4,3,2],   // Sun
-  1: [3,5,4,14,8,4,7,5,4],  // Mon
-  2: [4,6,5,13,7,4,6,5,3],  // Tue
-  3: [3,4,4,12,6,3,5,4,3],  // Wed
-  4: [4,7,6,15,9,5,8,6,4],  // Thu
-  5: [6,9,8,18,12,7,11,9,6],// Fri
-  6: [4,5,4,10,6,4,5,4,3],  // Sat
+  0: [1,2,3,3,8,5,3,4,3,2,1],   // Sun (closed, unused)
+  1: [2,3,5,4,14,8,4,7,5,4,2],  // Mon
+  2: [2,4,6,5,13,7,4,6,5,3,2],  // Tue
+  3: [2,3,4,4,12,6,3,5,4,3,1],  // Wed
+  4: [2,4,7,6,15,9,5,8,6,4,2],  // Thu
+  5: [3,6,9,8,18,12,7,11,9,6,3],// Fri
+  6: [1,4,5,4,10,6,4,5,4,3,1],  // Sat (closed, unused)
 };
 
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -53,14 +58,15 @@ function App() {
     let generatedPoints = [];
 
     if (dayType === 'today') {
+      // Existing logic: solid for past hours, dashed for future
+      // hours in baseHourlyTemplate are now 24h values directly
       let liveCursorInserted = false;
       baseHourlyTemplate.forEach((point) => {
-        const target24Hour = point.hour < 9 ? point.hour + 12 : point.hour;
-        if (!liveCursorInserted && systemHourRaw < target24Hour) {
+        if (!liveCursorInserted && systemHourRaw < point.hour) {
           generatedPoints.push({ time: timeAnchorLabel, wait: liveWaitTime, futureWait: liveWaitTime });
           liveCursorInserted = true;
         }
-        if (systemHourRaw >= target24Hour) {
+        if (systemHourRaw >= point.hour) {
           generatedPoints.push({ time: point.label, wait: point.baseWait, futureWait: null });
         } else {
           generatedPoints.push({ time: point.label, wait: null, futureWait: point.baseWait });
@@ -70,11 +76,13 @@ function App() {
         generatedPoints.push({ time: timeAnchorLabel, wait: liveWaitTime, futureWait: liveWaitTime });
       }
     } else if (dayType === 'past') {
+      // All solid — historical recorded data
       const historical = historicalDataByDay[dayIndex] || baseHourlyTemplate.map(p => p.baseWait);
       baseHourlyTemplate.forEach((point, i) => {
         generatedPoints.push({ time: point.label, wait: historical[i], futureWait: null });
       });
     } else {
+      // Future — all dashed predictions
       const predicted = historicalDataByDay[dayIndex] || baseHourlyTemplate.map(p => p.baseWait);
       baseHourlyTemplate.forEach((point, i) => {
         generatedPoints.push({ time: point.label, wait: null, futureWait: predicted[i] });
@@ -109,6 +117,7 @@ function App() {
     }
   }, [liveData.waitTime]);
 
+  // Recompute chart when selected day changes
   useEffect(() => {
     if (selectedDayIndex === null) return;
     const now = new Date();
@@ -124,6 +133,17 @@ function App() {
     const timeAnchorLabel = `${currentHour}:${minutesString}${ampm}`;
 
     let dayType;
+    // Compare by distance from today in the week
+    const diff = selectedDayIndex - todayIdx;
+    if (selectedDayIndex === todayIdx) {
+      dayType = 'today';
+    } else if (diff < 0 || diff >= 5) {
+      // Past: earlier in the week (simple: index < today), wrap for Sun
+      dayType = selectedDayIndex < todayIdx ? 'past' : 'future';
+    } else {
+      dayType = 'future';
+    }
+    // Simpler rule: any day index < todayIdx is past, > is future, === is today
     if (selectedDayIndex < todayIdx) dayType = 'past';
     else if (selectedDayIndex > todayIdx) dayType = 'future';
     else dayType = 'today';
@@ -189,6 +209,7 @@ function App() {
     submitDataToSpreadsheet(userRating, feedbackNotes);
   };
 
+  // Determine selected day type for chart title / reference line visibility
   const getSelectedDayType = () => {
     if (selectedDayIndex === null) return 'today';
     if (selectedDayIndex < todayDayIndex) return 'past';
@@ -198,6 +219,12 @@ function App() {
 
   const selectedDayType = getSelectedDayType();
   const isClosed = selectedDayIndex !== null && CLOSED_DAYS.includes(selectedDayIndex);
+
+  // Out-of-hours: viewing today but current time is before open or after close
+  const nowHour = new Date().getHours();
+  const isViewingToday = selectedDayIndex === todayDayIndex;
+  const outOfHours = isViewingToday && !isClosed && (nowHour < OPEN_HOUR || nowHour >= CLOSE_HOUR);
+  const opensToday  = nowHour < OPEN_HOUR;   // true = "opens later", false = "already closed today" 
 
   return (
     <div className="dashboard-container">
@@ -240,102 +267,95 @@ function App() {
         })}
       </div>
 
+      {/* Out-of-hours banner */}
+      {outOfHours && (
+        <div className="out-of-hours-banner">
+          <span className="out-of-hours-icon">{opensToday ? '🕗' : '🔒'}</span>
+          <div>
+            <p className="out-of-hours-title">
+              {opensToday ? "ShakeSmart isn\u2019t open yet" : 'ShakeSmart is closed'}
+            </p>
+            <p className="out-of-hours-sub">
+              {opensToday
+                ? 'Opens today at 8:00 am — check back soon!'
+                : 'Closed for today. Opens Monday–Friday, 8 am – 6 pm.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       <main className="dashboard-grid">
         <section className="summary-column">
           <div className="day-banner">
             <span className="day-text">
               {selectedDayIndex === todayDayIndex ? `Today — ${currentDayStr}` : currentDayStr}
             </span>
-            {!isClosed && selectedDayType === 'past' && (
+            {selectedDayType === 'past' && (
               <span className="day-type-badge day-type-badge--past">Historical</span>
             )}
-            {!isClosed && selectedDayType === 'future' && (
+            {selectedDayType === 'future' && (
               <span className="day-type-badge day-type-badge--future">Predicted</span>
             )}
           </div>
 
           <div className="purple-card">
-            {isClosed ? (
-              <>
-                <div className="live-indicator">
-                  <span className="pulse-dot">🔘</span>
-                  <span>Closed</span>
-                </div>
-                <h2 className="card-stats">ShakeSmart is closed on weekends</h2>
-              </>
-            ) : (
-              <>
-                <div className="live-indicator">
-                  <span className="pulse-dot">🔘</span>
-                  <span>
-                    {selectedDayType === 'today'
-                      ? `Live: ${liveData.statusText}`
-                      : selectedDayType === 'past'
-                      ? 'Historical data'
-                      : 'Forecast'}
-                  </span>
-                </div>
-                <h2 className="card-stats">
-                  {selectedDayType === 'today'
-                    ? `${liveData.peopleCount} people in line · ${liveData.waitTime} minute wait`
-                    : selectedDayType === 'past'
-                    ? `Avg wait: ${historicalDataByDay[selectedDayIndex]?.[3] ?? '—'} min at peak`
-                    : `Est. peak wait: ~${historicalDataByDay[selectedDayIndex]?.[3] ?? '—'} min`}
-                </h2>
-              </>
-            )}
+            <div className="live-indicator">
+              <span className="pulse-dot">🔘</span>
+              <span>
+                {selectedDayType === 'today'
+                  ? `Live: ${liveData.statusText}`
+                  : selectedDayType === 'past'
+                  ? 'Historical data'
+                  : 'Forecast'}
+              </span>
+            </div>
+            <h2 className="card-stats">
+              {selectedDayType === 'today'
+                ? `${liveData.peopleCount} people in line · ${liveData.waitTime} minute wait`
+                : selectedDayType === 'past'
+                ? `Avg wait: ${historicalDataByDay[selectedDayIndex]?.[3] ?? '—'} min at peak`
+                : `Est. peak wait: ~${historicalDataByDay[selectedDayIndex]?.[3] ?? '—'} min`}
+            </h2>
           </div>
 
-          {!isClosed && (
-            <div className="section-container">
-              <h3 className="section-title">BEST TIMES {selectedDayType === 'today' ? 'TODAY' : 'THAT DAY'}</h3>
-              <div className="time-tag-container">
-                {liveData.bestTimes.map(time => (
-                  <span key={time} className="time-tag">{time}</span>
-                ))}
-              </div>
+          <div className="section-container">
+            <h3 className="section-title">BEST TIMES {selectedDayType === 'today' ? 'TODAY' : selectedDayType === 'past' ? 'THAT DAY' : 'THAT DAY'}</h3>
+            <div className="time-tag-container">
+              {liveData.bestTimes.map(time => (
+                <span key={time} className="time-tag">{time}</span>
+              ))}
             </div>
-          )}
+          </div>
         </section>
 
         <section className="chart-column">
           <div className="section-container card-wrapper-bg">
-            {isClosed ? (
-              <div className="closed-message">
-                <span className="closed-icon">🚪</span>
-                <h3 className="closed-title">Closed</h3>
-                <p className="closed-subtitle">ShakeSmart is only open Monday – Friday</p>
-              </div>
-            ) : (
-              <>
-                <h3 className="section-title">
-                  {selectedDayType === 'past' ? 'RECORDED WAIT TIMES' : selectedDayType === 'future' ? 'PREDICTED WAIT TIMES' : 'BUSY TIMES TODAY'}
-                </h3>
-                {selectedDayType === 'future' && (
-                  <p className="chart-prediction-note">All times are estimates based on historical patterns</p>
-                )}
-                <div className="chart-wrapper">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorPurple" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4e2a84" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#4e2a84" stopOpacity={0.0}/>
-                        </linearGradient>
-                      </defs>
-                      <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} unit="m" />
-                      <Tooltip contentStyle={{ backgroundColor: '#4e2a84', borderRadius: '10px', color: '#fff' }} itemStyle={{ color: '#fff' }} />
-                      {selectedDayType === 'today' && (
-                        <ReferenceLine x={currentTimeStr} stroke="#4e2a84" strokeWidth={1} strokeDasharray="3 3" />
-                      )}
-                      <Area type="monotone" dataKey="wait" stroke="#4e2a84" strokeWidth={4} fill="url(#colorPurple)" dot={false} />
-                      <Area type="monotone" dataKey="futureWait" stroke="#4e2a84" strokeWidth={3} strokeDasharray="6 6" fill="none" dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </>
+            <h3 className="section-title">
+              {selectedDayType === 'past' ? 'RECORDED WAIT TIMES' : selectedDayType === 'future' ? 'PREDICTED WAIT TIMES' : 'BUSY TIMES TODAY'}
+            </h3>
+            {selectedDayType === 'future' && (
+              <p className="chart-prediction-note">All times are estimates based on historical patterns</p>
             )}
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorPurple" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#4e2a84" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#4e2a84" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#666', fontSize: 11 }} unit="m" />
+                  <Tooltip contentStyle={{ backgroundColor: '#4e2a84', borderRadius: '10px', color: '#fff' }} itemStyle={{ color: '#fff' }} />
+                  {selectedDayType === 'today' && (
+                    <ReferenceLine x={currentTimeStr} stroke="#4e2a84" strokeWidth={1} strokeDasharray="3 3" />
+                  )}
+                  <Area type="monotone" dataKey="wait" stroke="#4e2a84" strokeWidth={4} fill="url(#colorPurple)" dot={false} />
+                  <Area type="monotone" dataKey="futureWait" stroke="#4e2a84" strokeWidth={3} strokeDasharray="6 6" fill="none" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </section>
       </main>

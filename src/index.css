@@ -309,7 +309,7 @@ body {
   }
 }
 
-/* ── Day selector strip ── */
+/* ── Day selector strip (new) ── */
 
 .day-selector-strip {
   display: flex;
@@ -390,24 +390,6 @@ body {
   border-color: #4e2a84;
 }
 
-/* Closed days (Sat / Sun) */
-.day-pill--closed {
-  background-color: #f9fafb;
-  color: #ccc;
-  border-color: #e5e7eb;
-  cursor: default;
-}
-.day-pill--closed:hover {
-  background-color: #f9fafb;
-  border-color: #e5e7eb;
-  color: #ccc;
-}
-.day-pill--closed.day-pill--selected {
-  background-color: #e5e7eb;
-  color: #999;
-  border-color: #d1d5db;
-}
-
 /* Day type badge shown next to day name */
 .day-type-badge {
   font-size: 11px;
@@ -434,27 +416,47 @@ body {
   font-style: italic;
 }
 
-/* Closed message shown in place of the chart */
-.closed-message {
+/* ── Closed day pill ── */
+.day-pill--closed {
+  background-color: #f9fafb;
+  color: #ccc;
+  border-color: #eee;
+  cursor: default;
+}
+.day-pill--closed:hover {
+  background-color: #f9fafb;
+  border-color: #eee;
+  color: #ccc;
+}
+.day-pill--closed.day-pill--selected {
+  background-color: #e5e7eb;
+  color: #999;
+  border-color: #d1d5db;
+}
+
+/* ── Out-of-hours banner ── */
+.out-of-hours-banner {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  height: 260px;
-  gap: 8px;
+  gap: 14px;
+  background-color: #fff8ed;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
 }
-.closed-icon {
-  font-size: 36px;
+.out-of-hours-icon {
+  font-size: 28px;
+  flex-shrink: 0;
 }
-.closed-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #bbb;
-  margin: 0;
-  letter-spacing: 1px;
+.out-of-hours-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 4px 0;
 }
-.closed-subtitle {
-  font-size: 14px;
-  color: #bbb;
+.out-of-hours-sub {
+  font-size: 13px;
+  color: #b45309;
   margin: 0;
 }
